@@ -18,6 +18,11 @@ class CodeBusters
     private $ghosts_count = 0;
 
     /**
+     * @var Action[]
+     */
+    private $actions = [];
+
+    /**
      * @var Ghost[]
      */
     private $ghosts = [];
@@ -265,6 +270,55 @@ class CodeBusters
 
                     error_log('moving to (' . $buster->getTargetX() . ', ' . $buster->getTargetY() . ')');
                     echo "MOVE " . $buster->getTargetX() . " " . $buster->getTargetY() . "\n";
+                }
+            }
+        }
+    }
+
+    private function addAction($action)
+    {
+        $this->actions[] = $action;
+    }
+
+    private function arrangeActions()
+    {
+        foreach ($this->getBustersByTeam($this->my_team) as $buster) {
+            if ($buster->getState() == Buster::STATE_CARRYING_GHOST && $this->distance($buster->getX(), $buster->getY(), $this->base_x, $this->base_y) < 1600) {
+                $action = new ActionRelease();
+                $action->addExecutor($buster);
+
+                $this->addAction($action);
+            }
+
+            if (!$buster->isChargeCooldown()) {
+                foreach ($this->getBustersByTeam($this->enemy_team) as $enemy_buster) {
+                    $distance = $this->distance($buster->getX(), $buster->getY(), $enemy_buster->getX(), $enemy_buster->getY());
+
+                    if ($distance < 1760) {
+                        $action = new ActionStun();
+                        $action
+                            ->addExecutor($buster)
+                            ->setTarget($enemy_buster)
+                        ;
+
+                        $this->addAction($action);
+                    }
+                }
+            }
+
+            foreach ($this->ghosts as $ghost) {
+                if ($ghost->isVisible()) {
+                    $distance = $this->distance($buster->getX(), $buster->getY(), $ghost->getX(), $ghost->getY());
+
+                    if ($distance < 1760 && $distance > 900) {
+                        $action = new ActionBust();
+                        $action
+                            ->addExecutor($buster)
+                            ->setTarget($ghost)
+                        ;
+
+                        $this->addAction($action);
+                    }
                 }
             }
         }
