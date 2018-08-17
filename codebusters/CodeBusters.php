@@ -56,6 +56,10 @@ class CodeBusters
     {
         fscanf(STDIN, "%d", $entities_count);
 
+        foreach ($this->busters as $buster) {
+            $buster->setVisible(false);
+        }
+
         foreach ($this->ghosts as $ghost) {
             $ghost->setVisible(false);
         }
@@ -78,6 +82,7 @@ class CodeBusters
                     ->setState($state)
                     ->setValue($value)
                     ->decreaseChargeCooldown()
+                    ->setVisible(true)
                 ;
             }
         }

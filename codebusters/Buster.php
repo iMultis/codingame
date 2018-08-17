@@ -15,6 +15,7 @@ class Buster {
     private $target_x;
     private $target_y;
     private $charge_cooldown = 0;
+    private $visible;
 
     public function __construct($id, $team)
     {
@@ -219,4 +220,22 @@ class Buster {
         return $this;
     }
 
+    /**
+     * @return boolean
+     */
+    public function isVisible()
+    {
+        return $this->visible;
+    }
+
+    /**
+     * @param boolean $visible
+     * @return $this
+     */
+    public function setVisible($visible)
+    {
+        $this->visible = (boolean) $visible;
+
+        return $this;
+    }
 }
