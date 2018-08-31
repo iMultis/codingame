@@ -226,10 +226,10 @@ class CodeBusters
 
         if (count($ghosts)) {
             foreach ($ghosts as $ghost) {
-                $
-                foreach ($this->getBustersByTeam($this->my_team) as $buster) {
-                    if
-                }
+//                $
+//                foreach ($this->getBustersByTeam($this->my_team) as $buster) {
+//                    if
+//                }
             }
 
             $buster->setTargetX($ghost->getX());
@@ -242,9 +242,44 @@ class CodeBusters
 
     public function hunt()
     {
-        error_log('hunt');
+        $this->arrangeActions();
+
+        uasort($this->actions, function ($action1, $action2) {
+            if ($action1->getType() == Action::TYPE_RELEASE && $action2->getType() == Action::TYPE_RELEASE) {
+                return 0;
+            } elseif ($action1->getType() == Action::TYPE_RELEASE || $action2->getType() == Action::TYPE_RELEASE) {
+                return $action1->getType() == Action::TYPE_RELEASE ? 1 : -1;
+            }
+
+            if ($action1->getType() == Action::TYPE_STUN && $action2->getType() == Action::TYPE_STUN) {
+                return 0;
+            } elseif ($action1->getType() == Action::TYPE_STUN || $action2->getType() == Action::TYPE_STUN) {
+                return $action1->getType() == Action::TYPE_STUN ? 1 : -1;
+            }
+
+            if ($action1->getType() == Action::TYPE_BUST && $action2->getType() == Action::TYPE_BUST) {
+                return 0;
+            } elseif ($action1->getType() == Action::TYPE_BUST || $action2->getType() == Action::TYPE_BUST) {
+                return $action1->getType() == Action::TYPE_BUST ? 1 : -1;
+            }
+
+            return 0;
+        });
+
+
+
+
 
         foreach ($this->getBustersByTeam($this->my_team) as $buster) {
+            $buster->sortPretendedActions();
+            $buster->setAction(reset($buster->getPretendedActions()));
+        }
+
+        foreach ($this->getBustersByTeam($this->my_team) as $buster) {
+            echo $buster->getAction();
+        }
+
+        /*foreach ($this->getBustersByTeam($this->my_team) as $buster) {
             $stunable_buster = $this->getStunableBuster($buster->getX(), $buster->getY());
 
             if (!$buster->isChargeCooldown() && $stunable_buster) {
@@ -277,12 +312,30 @@ class CodeBusters
                     echo "MOVE " . $buster->getTargetX() . " " . $buster->getTargetY() . "\n";
                 }
             }
-        }
+        }*/
     }
 
+    /**
+     * @param Action $action
+     */
     private function addAction($action)
     {
-        $this->actions[] = $action;
+        switch ($action->getType()) {
+            case Action::TYPE_RELEASE:
+                $this->actions[] = $action;
+                break;
+
+            case Action::TYPE_BUST:
+            case Action::TYPE_STUN:
+                foreach ($this->actions as $cur_action) {
+                    if ($cur_action->getType() == $action->getType() && $cur_action->getTarget() == $action->getTarget()) {
+                        foreach ($action->getPretenders() as $pretender) {
+                            $cur_action->addPretender($pretender);
+                        }
+                    }
+                }
+                break;
+        }
     }
 
     private function arrangeActions()
@@ -290,7 +343,7 @@ class CodeBusters
         foreach ($this->getBustersByTeam($this->my_team) as $buster) {
             if ($buster->getState() == Buster::STATE_CARRYING_GHOST && $this->distance($buster->getX(), $buster->getY(), $this->base_x, $this->base_y) < 1600) {
                 $action = new ActionRelease();
-                $action->addExecutor($buster);
+                $action->setExecutor($buster);
 
                 $this->addAction($action);
             }
@@ -302,7 +355,7 @@ class CodeBusters
                     if ($distance < 1760) {
                         $action = new ActionStun();
                         $action
-                            ->addExecutor($buster)
+                            ->addPretender($buster)
                             ->setTarget($enemy_buster)
                         ;
 
@@ -318,7 +371,7 @@ class CodeBusters
                     if ($distance < 1760 && $distance > 900) {
                         $action = new ActionBust();
                         $action
-                            ->addExecutor($buster)
+                            ->addPretender($buster)
                             ->setTarget($ghost)
                         ;
 

@@ -2,5 +2,16 @@
 
 class ActionRelease extends Action
 {
-    const TYPE = Action::TYPE_RELEASE;
+    public function __toString()
+    {
+        return "{$this->getType()}";
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getType()
+    {
+        return Action::TYPE_RELEASE;
+    }
 }

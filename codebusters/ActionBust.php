@@ -2,12 +2,21 @@
 
 class ActionBust extends Action
 {
-    const TYPE = Action::TYPE_BUST;
+    /** @var Ghost */
+    private $target;
+
+    public function __toString()
+    {
+        return "{$this->getType()} {$this->target}";
+    }
 
     /**
-     * @var Ghost
+     * @inheritdoc
      */
-    private $target;
+    public function getType()
+    {
+        return Action::TYPE_BUST;
+    }
 
     /**
      * @return Ghost
@@ -24,6 +33,18 @@ class ActionBust extends Action
     public function setTarget($target)
     {
         $this->target = $target;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function sortPretenders()
+    {
+        uasort($this->pretenders, function($buster1, $buster2) {
+            return $this->distance($buster1->getX(), $buster1->getY(), $this->base_x, $this->base_y) - $this->distance($buster2->getX(), $buster2->getY(), $this->base_x, $this->base_y);
+        });
 
         return $this;
     }
