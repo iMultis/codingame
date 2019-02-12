@@ -9,6 +9,10 @@ Currently implemented games
 
 Usage
 ------------
+Install dependencies with:
+```
+composer install
+```
 Build:
 ```
 php bin/console build <game_name>
